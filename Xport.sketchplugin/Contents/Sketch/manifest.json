@@ -1,0 +1,33 @@
+{
+  "author" : "Aby Nimbalkar",
+  "commands" : [
+    {
+      "script" : "_handlers.cocoascript",
+      "handler" : "exportSelectedLayers",
+      "shortcut" : "ctrl shift 7",
+      "name" : "Send Selection to Xcode",
+      "identifier" : "exportSelectedLayers"
+    },
+	{
+      "script" : "_handlers.cocoascript",
+      "handler" : "selectXcodeProject",
+      "shortcut" : "",
+      "name" : "Select Xcode Project",
+      "identifier" : "selectXcodeProject"
+    }
+  ],
+  "bundleVersion" : 1,
+  "identifier" : "com.silverux.sketchplugins.xport",
+  "version" : "1.0",
+  "homepage" : "https:\/\/github.com\/abynim\/Xport",
+  "description" : "Export Sketch layers directly to Xcode.",
+  "menu" : {
+    "items" : [
+      "selectXcodeProject",
+      "exportSelectedLayers"
+    ]
+  },
+  "compatibleVersion" : 3.3,
+  "authorEmail" : "aby@silverux.com",
+  "name" : "Xport"
+}
