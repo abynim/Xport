@@ -9,3 +9,8 @@ var exportSelectedLayers = function(context) {
 	parseContext(context)
 	showExportDialog()
 }
+
+var exportWithPadding = function(context) {
+	parseContext(context)
+	showPaddingDialog()
+}

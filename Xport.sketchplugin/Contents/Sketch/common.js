@@ -781,9 +781,10 @@ function readTextFromFile(filePath) {
 	return nil;
 }
 
-function jsonFromFile(filePath) {
+function jsonFromFile(filePath, mutable) {
 	var data = [NSData dataWithContentsOfFile:filePath];
-	return [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+	var options = mutable == true ? NSJSONReadingMutableContainers : 0
+	return [NSJSONSerialization JSONObjectWithData:data options:options error:nil];
 }
 
 //--------------------------------------
@@ -1116,9 +1117,9 @@ function unescapeString(escapedString) {
 //  Managing manifest.json
 //--------------------------------------
 
-function getManifestJSON() {
+function getManifestJSON(mutable) {
 	var manifestFilePath = [[plugin url] path] + "/Contents/Sketch/manifest.json";
-	return jsonFromFile(manifestFilePath);
+	return jsonFromFile(manifestFilePath, mutable);
 }
 
 function getCommandForIdentifier(identifier) {

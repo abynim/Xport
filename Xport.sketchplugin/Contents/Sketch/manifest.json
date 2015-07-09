@@ -8,12 +8,12 @@
       "name" : "Send Selection to Xcode",
       "identifier" : "exportSelectedLayers"
     },
-	{
+  {
       "script" : "_handlers.cocoascript",
-      "handler" : "selectXcodeProject",
+      "handler" : "exportWithPadding",
       "shortcut" : "",
-      "name" : "Select Xcode Project",
-      "identifier" : "selectXcodeProject"
+      "name" : "Export Selection with Padding",
+      "identifier" : "exportWithPadding"
     }
   ],
   "bundleVersion" : 1,
@@ -23,8 +23,8 @@
   "description" : "Export Sketch layers directly to Xcode.",
   "menu" : {
     "items" : [
-      "selectXcodeProject",
-      "exportSelectedLayers"
+      "exportSelectedLayers",
+      "exportWithPadding"
     ]
   },
   "compatibleVersion" : 3.3,

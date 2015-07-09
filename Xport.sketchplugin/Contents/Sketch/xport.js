@@ -2,7 +2,7 @@
 
 iconName = "icon.png"
 pluginDomain = "com.silverux.sketchplugins.xport";
-pluginName = "Silver"
+pluginName = "Xport"
 
 var presets = {
 	projectPath: '',
@@ -29,6 +29,68 @@ var showExportDialog = function() {
 	}
 
 	authorizeHomeFolder(exportSelectedLayersToXcode)
+}
+
+var showPaddingDialog = function() {
+	if (selectionIsEmpty()) {
+		showDialog("Select one or more Layers or Groups to export.")
+		return
+	}
+
+	// select save destination
+	var savePanel = [NSSavePanel savePanel]
+	[savePanel setAllowsOtherFileTypes:false]
+	[savePanel setExtensionHidden:false]
+	[savePanel setCanCreateDirectories:true]
+	[savePanel setNameFieldStringValue:[[selection firstObject] name]]
+	[savePanel setTitle:"Export Selection with Padding"]
+
+	var paddingAccessoryView = [[NSView alloc] initWithFrame:CGRectMake(0,0,130,50)]
+	var paddingLabel = [[NSTextField alloc] initWithFrame:CGRectMake(0,12,74,23)]
+	[paddingLabel setDrawsBackground:false]
+	[paddingLabel setBordered:false]
+	[paddingLabel setStringValue:"Padding:"]
+	[paddingLabel setAlignment:NSRightTextAlignment]
+
+	[paddingLabel setEditable:false]
+	var paddingTextfield = [[NSTextField alloc] initWithFrame:CGRectMake(80,14,50,23)]
+	[paddingTextfield setStringValue:"10 px"]
+	[paddingAccessoryView addSubview:paddingLabel]
+	[paddingAccessoryView addSubview:paddingTextfield]
+	[savePanel setAccessoryView:paddingAccessoryView]
+
+	var response = [savePanel runModal]
+	if (response == NSOKButton) {
+
+		var saveToFolder = [[[savePanel URL] path] stringByDeletingLastPathComponent],
+			padding = parseFloat([paddingTextfield stringValue]),
+			loop = [selection objectEnumerator],
+			layer, ogLayer, exportSize, rect, finalRect, slice, path;
+
+		while (ogLayer = [loop nextObject]) {
+			layer = [ogLayer duplicate]
+			[[[layer exportOptions] sizes] removeAllObjects];
+			[[layer exportOptions] addExportSize];
+
+			exportSize = [[[[layer exportOptions] sizes] array] lastObject]
+			rect = [[layer absoluteRect] rect]
+
+			exportSize.scale = 1;
+			exportSize.name = "";
+			exportSize.format = "png";
+			
+			finalRect = CGRectInset(rect, -padding, -padding);
+			slice = [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:finalRect];
+
+			path = [[saveToFolder stringByAppendingPathComponent:[ogLayer name]] stringByAppendingPathExtension:"png"]
+			[doc saveArtboardOrSlice:slice toFile: path];
+
+			[layer removeFromParent]
+		}
+
+		var numLayers = [selection count]
+		[doc showMessage:(numLayers + " images exported.")]
+	}
 }
 
 var exportSelectedLayersToXcode = function() {
@@ -61,16 +123,17 @@ var exportSelectedLayersToXcode = function() {
 	var folders = [fileManager enumeratorAtPath:pathString];
 	var targetPaths = [NSArray array];
 	var targetNames = [NSArray array];
-	var availableGroups = [NSArray arrayWithObject:""];
-	var assetsFolder, targetPath, imageGroups,
+	var availableGroups = [NSArray new];
+	var assetsFolder, targetPath, imageGroups, imagesBundlePath,
 		imageGroupPredicate = NSPredicate.predicateWithFormat("(pathExtension == '') && (NOT SELF BEGINSWITH '.')");
 
 	while (assetsFolder = [folders nextObject]) {
 		if ([assetsFolder pathExtension] == "xcassets") {
 			targetPath = pathString + "/" + assetsFolder
+			imagesBundlePath = [[NSBundle bundleWithPath:targetPath] bundlePath]
 			targetPaths = [targetPaths arrayByAddingObject:targetPath]
 			targetNames = [targetNames arrayByAddingObject:[[assetsFolder stringByDeletingLastPathComponent] lastPathComponent]]
-			imageGroups = [fileManager contentsOfDirectoryAtPath:assetsFolder error:nil]
+			imageGroups = [fileManager contentsOfDirectoryAtPath:imagesBundlePath error:nil]
 			if (imageGroups != nil) {
 				imageGroups = [imageGroups filteredArrayUsingPredicate:imageGroupPredicate]
 				availableGroups = [availableGroups arrayByAddingObjectsFromArray:imageGroups]
@@ -90,7 +153,7 @@ var exportSelectedLayersToXcode = function() {
 	// Add to group
 	[alert addTextLabelWithValue: 'Add imagesets to group (Ex: icons, buttons, etc):']
 	var orderedSet = [NSOrderedSet orderedSetWithArray:availableGroups],
-		groupOptions = [orderedSet array],
+		groupOptions = [availableGroups count] == 0 ? [NSArray arrayWithObject:""] : [orderedSet array],
 		lastGroupName = userDefaults.groupName,
 		lastGroupNameIndex = [groupOptions containsObject:lastGroupName] ? [groupOptions indexOfObject:lastGroupName] : 0,
 		groupNamesSelector = createSelect(groupOptions, lastGroupNameIndex)
