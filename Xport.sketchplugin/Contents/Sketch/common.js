@@ -20,7 +20,10 @@ var app = [NSApplication sharedApplication],
 	pluginDomain,
 	iconName,
 	isRemote = false,
-	debug = true;
+	debug = true,
+	SKVersion3_3 = "3.3",
+	SKVersion3_4 = "3.4",
+	sketchVersion = getMajorVersion();
 
 
 //--------------------------------------
@@ -49,6 +52,20 @@ function parseContext(context, remote) {
 
 function sketchLog(l) { 
 	if (debug) log(l);
+}
+
+function getSketchVersionNumber() {
+	const version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]
+	var versionNumber = version.stringByReplacingOccurrencesOfString_withString(".", "") + ""
+	while(versionNumber.length != 3) {
+		versionNumber += "0"
+	}
+	return parseInt(versionNumber)
+}
+
+function getMajorVersion() {
+	const version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] + ""
+    return version.substr(0, 3)
 }
 	
 //--------------------------------------
@@ -642,7 +659,7 @@ function exportLayerToPath(ogLayer, path, scale, format, suffix, overwrite) {
 	}
 	
 	if (overwrite || ![fileManager fileExistsAtPath:path]) {
-		var slice = [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:finalRect];
+		var slice = getSketchVersionNumber() >= 344 ? [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:rect useIDForName:false] : [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:rect]
 		[doc saveArtboardOrSlice:slice toFile: path];
 		slice = nil;
 	}
