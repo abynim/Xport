@@ -659,7 +659,7 @@ function exportLayerToPath(ogLayer, path, scale, format, suffix, overwrite) {
 	}
 	
 	if (overwrite || ![fileManager fileExistsAtPath:path]) {
-		var slice = getSketchVersionNumber() >= 344 ? [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:rect useIDForName:false] : [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:rect]
+		var slice = getSketchVersionNumber() >= 344 ? [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:finalRect useIDForName:false] : [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:finalRect]
 		[doc saveArtboardOrSlice:slice toFile: path];
 		slice = nil;
 	}
