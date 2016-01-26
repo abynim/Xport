@@ -136,34 +136,53 @@ function addArtboard(name, rect, page) {
 }
 
 function addBitmap(filePath, parent, name) {
-	var parent = parent ? parent : stage,
-		layer = [MSBitmapLayer new];
-	
-	if(![parent documentData]) {
-		showDialog("Before adding a Bitmap, add its parent to the document.");
-		return;
+
+	if (getSketchVersionNumber() >= 340) {
+		var parent = parent ? parent : stage;	
+		if(![parent documentData]) {
+			showDialog("Before adding a Bitmap, add its parent to the document.")
+			return
+		}
+		
+		var layer = [MSBitmapLayer bitmapLayerWithImageFromPath:filePath]
+		if(!name) name = "Bitmap"
+		[layer setName:name]
+		[parent addLayers:[layer]]
+
+		return layer
+
+	} 
+	else {
+		var parent = parent ? parent : stage,
+			layer = [MSBitmapLayer new];
+		
+		if(![parent documentData]) {
+			showDialog("Before adding a Bitmap, add its parent to the document.")
+			return
+		}
+		
+		if(!name) name = "Bitmap"
+		[layer setName:name]
+		[parent addLayers:[layer]]
+			
+		var image = [[NSImage alloc] initWithContentsOfFile:filePath]
+		if(image) {
+			var originalImageSize = [image size],
+				fills = [[layer style] fills];
+			
+			[layer setConstrainProportions:false]
+			[fills addNewStylePart]
+			[[fills firstObject] setIsEnabled:false]
+			[layer setRawImage:image convertColourspace:false collection:[[doc documentData] images]]
+			[[layer frame] setWidth:originalImageSize.width]
+			[[layer frame] setHeight:originalImageSize.height]
+			[layer setConstrainProportions:true]
+		} else {
+			showDialog("Image file could not be found!")
+		}
+		return layer;
 	}
 	
-	if(!name) name = "Bitmap";
-	[layer setName:name];
-	[parent addLayers:[layer]];
-		
-	var image = [[NSImage alloc] initWithContentsOfFile:filePath];
-	if(image) {
-		var originalImageSize = [image size],
-			fills = [[layer style] fills];
-		
-		[layer setConstrainProportions:false];
-		[fills addNewStylePart];
-		[[fills firstObject] setIsEnabled:false];
-		[layer setRawImage:image convertColourspace:false collection:[[doc documentData] images]];
-		[[layer frame] setWidth:originalImageSize.width];
-		[[layer frame] setHeight:originalImageSize.height];
-		[layer setConstrainProportions:true];
-	} else {
-		showDialog("Image file could not be found!");
-	}
-	return layer;
 }
 
 function addLine(name, parent, startPoint, endPoint, thickness, hex, alpha, blendMode) {
@@ -631,47 +650,67 @@ function isTextLayerMultiline(textLayer) {
 //  Exporting Layers and Artboards
 //--------------------------------------
 
-function makeExportable(layer) {
-	return [[layer exportOptions] addExportSize];
+function makeExportable(layer, format) {
+
+	var format = (typeof format !== 'undefined') ? format : "png"
+	if (getSketchVersionNumber() >= 350) {
+		var slice = layer.exportOptions().addExportFormat()
+		slice.setFileFormat(format)
+		return slice
+	}
+
+	var slice = layer.exportOptions().addExportSize()
+	slice.setFormat(format)
+	return slice
 }
 
 function removeExportOptions(layer) {
-	[[[layer exportOptions] sizes] removeAllObjects];
+	[[[layer exportOptions] sizes] removeAllObjects]
 }
 
-function exportLayerToPath(ogLayer, path, scale, format, suffix, overwrite) {
-	var layer = [ogLayer duplicate];
-	[[layer exportOptions] addExportSize];
-	
+function exportLayerToPath(layer, path, scale, format, suffix) {
+
+	if(getSketchVersionNumber() >= 350) {
+
+		var rect = layer.absoluteRect().rect(),
+			slice = [MSExportRequest requestWithRect:rect scale:scale],
+			layerName = layer.name() + ((typeof suffix !== 'undefined') ? suffix : ""),
+			format = (typeof format !== 'undefined') ? format : "png";
+
+		slice.setShouldTrim(0)
+		slice.setSaveForWeb(1)
+		slice.configureForLayer(layer)
+		slice.setName(layerName)
+		slice.setFormat(format)
+		doc.saveArtboardOrSlice_toFile(slice, path)
+
+		return {
+		    x: Math.round(rect.origin.x),
+		    y: Math.round(rect.origin.y),
+		    width: Math.round(rect.size.width),
+		    height: Math.round(rect.size.height)
+		}
+	}
+
+	[[layer exportOptions] addExportSize]
 	var exportSize = [[[[layer exportOptions] sizes] array] lastObject],
 		rect = [[layer absoluteRect] rect],
-		overwrite = (typeof overwrite !== 'undefined') ? overwrite : true,
-		fileManager = [NSFileManager defaultManager];
-	exportSize.scale = (typeof scale !== 'undefined') ? scale : 1;
-	exportSize.name = (typeof suffix !== 'undefined') ? suffix : "";
-	exportSize.format = (typeof format !== 'undefined') ? format : "png";
-	
-	var finalRect = rect;
-	if (!isArtboard(layer)) {
-		var parentArtboard = getParentArtboard(layer),
-			parentArtboardRect = [[parentArtboard absoluteRect] rect],
-			finalRect =  CGRectIntersection(parentArtboardRect, rect);
-	}
-	
-	if (overwrite || ![fileManager fileExistsAtPath:path]) {
-		var slice = getSketchVersionNumber() >= 344 ? [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:finalRect useIDForName:false] : [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:finalRect]
-		[doc saveArtboardOrSlice:slice toFile: path];
-		slice = nil;
-	}
-	
-	removeLayer(layer);
-	exportSize = nil;
-	layer = nil;
+		scale = (typeof scale !== 'undefined') ? scale : 1,
+		suffix = (typeof suffix !== 'undefined') ? suffix : "",
+		format = (typeof format !== 'undefined') ? format : "png"
+	exportSize.scale = scale
+	exportSize.name = suffix
+	exportSize.format = format
+	var slice = getSketchVersionNumber() >= 344 ? [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:rect useIDForName:false] : [MSSliceMaker sliceFromExportSize:exportSize layer:layer inRect:rect]
+	[doc saveArtboardOrSlice:slice toFile: path]
+	[exportSize remove]
+	slice = nil
+	exportSize = nil
 	return {
-	    x: Math.round(finalRect.origin.x),
-	    y: Math.round(finalRect.origin.y),
-	    width: Math.round(finalRect.size.width),
-	    height: Math.round(finalRect.size.height)
+	    x: Math.round(rect.origin.x),
+	    y: Math.round(rect.origin.y),
+	    width: Math.round(rect.size.width),
+	    height: Math.round(rect.size.height)
 	}
 }
 
