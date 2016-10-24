@@ -16,7 +16,7 @@
       "identifier" : "exportWithPadding"
     }
   ],
-  "bundleVersion" : 1,
+  "bundleVersion" : 1.1,
   "identifier" : "com.silverux.sketchplugins.xport",
   "version" : "1.0",
   "homepage" : "https:\/\/github.com\/abynim\/Xport",
@@ -27,7 +27,7 @@
       "exportWithPadding"
     ]
   },
-  "compatibleVersion" : 3.3,
+  "compatibleVersion" : 4.0,
   "authorEmail" : "aby@silverux.com",
   "name" : "Xport"
 }
