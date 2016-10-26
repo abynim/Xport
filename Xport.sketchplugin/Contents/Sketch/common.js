@@ -208,13 +208,13 @@ function addArrowToLine(lineLayer, arrowPosition, arrowSize) {
 	[arrowPath moveToPoint:NSMakePoint(arrowSize.width*m,-arrowSize.height)];
 	[arrowPath lineToPoint:NSMakePoint(0,0)];
 	[arrowPath lineToPoint:NSMakePoint(arrowSize.width*m,arrowSize.height)];
-	
+
 	if (arrowPosition == 0) {
 		[lineLayer bezierPathForStartDecorationOnPath:arrowPath];
 	} else {
 		[lineLayer bezierPathForEndDecorationOnPath:arrowPath];
 	}
-	
+
 }
 
 function addLayer(name, type, parent) {
@@ -643,7 +643,7 @@ function desaturateBitmap(bmpLayer) {
 //--------------------------------------
 
 function isTextLayerMultiline(textLayer) {
-	return (isText(textLayer) && getRect(textLayer).height != [textLayer lineSpacing])
+	return (isText(textLayer) && getRect(textLayer).height != [textLayer lineHeight])
 }
 
 //--------------------------------------
