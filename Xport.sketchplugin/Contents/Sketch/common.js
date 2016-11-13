@@ -673,13 +673,14 @@ function exportLayerToPath(layer, path, scale, format, suffix) {
 	if(getSketchVersionNumber() >= 350) {
 
 		var rect = layer.absoluteRect().rect(),
-			slice = [MSExportRequest requestWithRect:rect scale:scale],
+			slice = MSExportRequest.alloc().init(),
 			layerName = layer.name() + ((typeof suffix !== 'undefined') ? suffix : ""),
 			format = (typeof format !== 'undefined') ? format : "png";
 
+		slice.setRect(rect)
+		slice.setScale(scale)
 		slice.setShouldTrim(0)
 		slice.setSaveForWeb(1)
-		slice.configureForLayer(layer)
 		slice.setName(layerName)
 		slice.setFormat(format)
 		doc.saveArtboardOrSlice_toFile(slice, path)
