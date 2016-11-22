@@ -334,6 +334,8 @@ var selectXcodeProjectPath = function(callbackMethod) {
 	[pathField setDrawsBackground:false]
 	[pathField setBordered:true]
 
+	alert.alert().window().setInitialFirstResponder(pathField);
+
 	if ([alert runModal] == "1000") {
 
 		userDefaults.projectPath = [pathField stringValue]
